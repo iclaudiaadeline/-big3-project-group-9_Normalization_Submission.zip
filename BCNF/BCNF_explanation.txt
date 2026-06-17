@@ -1,0 +1,130 @@
+BCNF Stage Explanation — Group 9
+================================
+
+PREREQUISITE
+------------
+This stage builds directly on the 3NF design. All 3NF tables are carried
+forward unchanged EXCEPT the Equipment tables (see below).
+
+
+WHAT IS BCNF?
+-------------
+For every functional dependency X → Y, X must be a candidate key.
+BCNF is stricter than 3NF.
+
+
+BCNF VIOLATION FOUND IN 3NF
+---------------------------
+Table affected: Equipment
+
+3NF design (carried from 2NF):
+  Equipment(EquipmentUsed, EquipmentRentalCost)
+  FD claimed: EquipmentUsed → EquipmentRentalCost
+
+Problem:
+  This table is in 3NF (no transitive dependencies), but it violates BCNF
+  because the functional dependency is not valid in the real data.
+  The same equipment type has different rental costs on different projects:
+    Crane:  5000 (P001), 5500 (P002), 6000 (P004), 6500 (P007)
+    Mixer:   800 (P003), 1000 (P005),  900 (P006)
+
+  EquipmentUsed alone cannot determine EquipmentRentalCost.
+  The correct determinant is the full composite key:
+    (ProjectID, EquipmentID) → RentalCost
+
+BCNF decomposition (change from 3NF):
+  BEFORE (3NF):
+    Equipment(EquipmentUsed, EquipmentRentalCost)
+    Project_Equipment(ProjectID, EquipmentUsed)
+
+  AFTER (BCNF):
+    Equipment(EquipmentID, EquipmentName)
+    Project_Equipment(ProjectID, EquipmentID, RentalCost)
+
+
+FUNCTIONAL DEPENDENCIES CHECKED — ALL OTHER TABLES
+---------------------------------------------------
+
+Clients
+  PK: ClientID
+  FD: ClientID → ClientName, ClientPhone, ClientEmail, ClientCity
+  Determinant is candidate key. BCNF satisfied.
+
+Supervisors
+  PK: SupervisorID
+  FD: SupervisorID → SupervisorName, SupervisorPhone
+  BCNF satisfied.
+
+Projects
+  PK: ProjectID
+  FD: ProjectID → all other columns
+  ClientID and SupervisorID are foreign keys only.
+  BCNF satisfied.
+
+Workers
+  PK: WorkerID
+  FD: WorkerID → WorkerName, WorkerPhone, WorkerHourlyRate
+  WorkerName is also a candidate key (unique).
+  BCNF satisfied.
+
+WorkerSkills
+  PK: (WorkerID, Skill) — no non-key attributes. BCNF satisfied.
+
+WorkerCertifications
+  PK: (WorkerID, Certification) — no non-key attributes. BCNF satisfied.
+
+Project_Worker
+  PK: (ProjectID, WorkerID) — junction only. BCNF satisfied.
+
+Suppliers
+  PK: SupplierID
+  FD: SupplierID → SupplierName, SupplierCity
+  BCNF satisfied.
+
+SupplierPhones
+  PK: (SupplierID, PhoneNumber) — BCNF satisfied.
+
+SupplierMaterial
+  PK: (SupplierID, Material)
+  FD: (SupplierID, Material) → UnitCost
+  Full composite key is the determinant. BCNF satisfied.
+
+Project_Supplier_Material
+  PK: (ProjectID, SupplierID, Material) — junction only. BCNF satisfied.
+
+
+CANDIDATE KEYS AFTER BCNF
+--------------------------
+Clients:                   ClientID
+Supervisors:               SupervisorID
+Projects:                  ProjectID
+Workers:                   WorkerID, WorkerName
+WorkerSkills:              (WorkerID, Skill)
+WorkerCertifications:      (WorkerID, Certification)
+Project_Worker:            (ProjectID, WorkerID)
+Suppliers:                 SupplierID, SupplierName
+SupplierPhones:            (SupplierID, PhoneNumber)
+SupplierMaterial:          (SupplierID, Material)
+Project_Supplier_Material: (ProjectID, SupplierID, Material)
+Equipment:                 EquipmentID, EquipmentName
+Project_Equipment:         (ProjectID, EquipmentID)
+
+
+WHAT CHANGED FROM 3NF TO BCNF
+------------------------------
+Only the Equipment tables changed:
+
+  3NF Equipment.csv          →  BCNF Equipment.csv
+  (EquipmentUsed, Cost)          (EquipmentID, EquipmentName)
+
+  3NF Project_Equipment.csv  →  BCNF Project_Equipment.csv
+  (ProjectID, EquipmentUsed)   (ProjectID, EquipmentID, RentalCost)
+
+All other 11 tables are identical between 3NF and BCNF.
+
+
+WHY THE DESIGN IS NOW IN BCNF
+------------------------------
+Every functional dependency has a determinant that is a candidate key.
+The Equipment decomposition ensures RentalCost is determined by
+(ProjectID, EquipmentID), not by equipment type alone.

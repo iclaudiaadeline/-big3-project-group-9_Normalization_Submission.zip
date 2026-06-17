@@ -1,0 +1,13 @@
+SupplierID,Material,UnitCost
+S001,Concrete,120
+S001,Steel,300
+S001,Bricks,2
+S001,Cement,15
+S002,Steel Beams,500
+S002,Concrete,140
+S003,Rebar,210
+S003,Concrete,110
+S004,Glass Panels,250
+S005,Concrete,130
+S005,Tiles,20
+S006,Concrete,115

@@ -1,0 +1,17 @@
+ProjectID,SupplierID,Material
+P001,S001,Concrete
+P001,S001,Steel
+P001,S002,Steel Beams
+P002,S003,Rebar
+P002,S003,Concrete
+P003,S001,Bricks
+P003,S001,Cement
+P004,S002,Steel Beams
+P004,S002,Concrete
+P004,S004,Glass Panels
+P005,S005,Concrete
+P005,S005,Tiles
+P006,S006,Concrete
+P007,S002,Steel Beams
+P007,S002,Concrete
+P007,S003,Rebar

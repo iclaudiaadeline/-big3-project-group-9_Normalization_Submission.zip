@@ -1,0 +1,110 @@
+3NF Stage Explanation — Group 9
+================================
+
+WHAT IS 3NF?
+------------
+A table is in Third Normal Form when:
+  1. It is already in 2NF.
+  2. No non-key attribute depends on another non-key attribute
+     (no transitive dependencies).
+
+
+TRANSITIVE DEPENDENCIES FOUND IN RAW / 2NF DATA
+------------------------------------------------
+
+1. CLIENT INFORMATION (Project → Client → Client details)
+
+   In the raw table:
+     ProjectID → ClientName
+     ClientName → ClientPhone, ClientEmail, ClientCity
+
+   ClientPhone and ClientEmail depend on ClientName, not directly on
+   ProjectID. This is a transitive dependency:
+     ProjectID → ClientName → ClientPhone
+
+   Fix: Created Clients table and replaced inline client columns with
+        ClientID as a foreign key in Projects.
+
+   New tables:
+     Clients(ClientID, ClientName, ClientPhone, ClientEmail, ClientCity)
+     Projects(..., ClientID)  -- FK references Clients
+
+
+2. SUPERVISOR INFORMATION (Project → Supervisor → Supervisor phone)
+
+   In the raw table:
+     ProjectID → SupervisorName
+     SupervisorName → SupervisorPhone
+
+   Transitive dependency:
+     ProjectID → SupervisorName → SupervisorPhone
+
+   Fix: Created Supervisors table and used SupervisorID FK in Projects.
+
+   New tables:
+     Supervisors(SupervisorID, SupervisorName, SupervisorPhone)
+     Projects(..., SupervisorID)  -- FK references Supervisors
+
+
+3. WORKER INFORMATION (in project-worker context)
+
+   In 2NF, worker details were already separated into worker.csv.
+   If worker phone/rate had stayed in Project_Worker, we would have:
+     (ProjectID, WorkerName) → WorkerPhone
+     but also WorkerName → WorkerPhone (transitive through WorkerName)
+
+   Fix: Workers table with WorkerID; Project_Worker uses WorkerID FK.
+   WorkerPhone and WorkerHourlyRate depend only on WorkerID (the key).
+
+
+4. SUPPLIER INFORMATION (Supplier → City and Phones)
+
+   In the raw table:
+     SupplierName → SupplierCity
+     SupplierName → SupplierPhone (multiple values)
+
+   Already partially fixed in 2NF with Supplier and Supplier_Phones tables.
+   In 3NF we added SupplierID as the primary key and used it as FK in
+   SupplierPhones, SupplierMaterial, and Project_Supplier_Material.
+
+
+5. MATERIAL UNIT COST (in project-material context)
+
+   In 1NF project_materials:
+     (ProjectID, SupplierID, Material) → UnitCost
+
+   UnitCost actually depends on (SupplierID, Material), not on ProjectID.
+   This is a partial dependency (2NF issue), resolved in 2NF by moving
+   cost to SupplierMaterial. 3NF keeps this split using SupplierID FKs.
+
+
+FOREIGN KEYS INTRODUCED IN 3NF
+-------------------------------
+  Projects.ClientID        → Clients.ClientID
+  Projects.SupervisorID    → Supervisors.SupervisorID
+  Project_Worker.WorkerID → Workers.WorkerID
+  WorkerSkills.WorkerID    → Workers.WorkerID
+  WorkerCertifications.WorkerID → Workers.WorkerID
+  SupplierPhones.SupplierID → Suppliers.SupplierID
+  SupplierMaterial.SupplierID → Suppliers.SupplierID
+  Project_Supplier_Material.SupplierID → Suppliers.SupplierID
+  Project_Supplier_Material.(SupplierID, Material) → SupplierMaterial
+
+
+TABLES CARRIED FORWARD FROM 2NF (UNCHANGED STRUCTURE)
+-----------------------------------------------------
+  Equipment(EquipmentUsed, EquipmentRentalCost)
+  Project_Equipment(ProjectID, EquipmentUsed)
+
+  These remain from 2NF. They have no transitive dependencies and are
+  in 3NF. They will be revised in BCNF because EquipmentUsed →
+  EquipmentRentalCost is not a valid dependency when costs vary per project.
+
+
+WHY THE DESIGN IS NOW IN 3NF
+-----------------------------
+Every non-key attribute depends directly on the primary key of its table,
+not on another non-key attribute. Client contact details live in Clients,
+supervisor phones live in Supervisors, worker details live in Workers,
+and supplier details live in Suppliers. Junction tables only store foreign
+keys and relationship data.

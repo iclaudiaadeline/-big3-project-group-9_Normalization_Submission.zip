@@ -1,218 +1,175 @@
 Stage 1: First Normal Form (1NF) Explanation
+=============================================
+
 
 
 1. Which Columns Violated 1NF?
+-------------------------------
+
 After carefully examining the raw CSV file big3_construction_raw_data.csv, we identified the following columns that violated First Normal Form (1NF) because they contained multiple values separated by the pipe character |:
-Column Name
-Example of Violation
-Problem
-WorkerSkills
-Carpentry|Framing
-Two skills stored in one cell
-WorkerCertifications
-OSHA|First Aid
-Two certifications stored in one cell
-SupplierPhones
-617-555-9000|617-555-9001
-Two phone numbers stored in one cell
-MaterialSupplied
-Concrete|Steel
-Two materials stored in one cell
-MaterialUnitCost
-120|300
-Two costs stored in one cell (linked to materials)
-EquipmentUsed
-Crane|Bulldozer
-Two equipment items stored in one cell
-EquipmentRentalCost
-5000|3000
-Two rental costs stored in one cell (linked to equipment)
+
+Column Name                | Example of Violation        | Problem
+---------------------------|-----------------------------|------------------------------------------
+WorkerSkills               | Carpentry|Framing            | Two skills stored in one cell
+WorkerCertifications       | OSHA|First Aid               | Two certifications stored in one cell
+SupplierPhones             | 617-555-9000|617-555-9001  | Two phone numbers stored in one cell
+MaterialSupplied           | Concrete|Steel               | Two materials stored in one cell
+MaterialUnitCost           | 120|300                     | Two costs stored in one cell (linked to materials)
+EquipmentUsed              | Crane|Bulldozer              | Two equipment items stored in one cell
+EquipmentRentalCost        | 5000|3000                   | Two rental costs stored in one cell (linked to equipment)
+
 
 Additional Violation - Repeating Groups:
+----------------------------------------
+
 We also identified repeating groups in the data. Project information (ProjectName, StartDate, EndDate, SiteAddress, ClientName, SupervisorName, etc.) was repeated for every worker assigned to a project.
+
 Example:
-ProjectID
-ProjectName
-WorkerName
-P001
-Downtown Plaza
-Mike Ross
-P001
-Downtown Plaza
-Rachel Zane
-P001
-Downtown Plaza
-Harvey Specter
+
+ProjectID | ProjectName      | WorkerName
+----------|------------------|------------
+P001      | Downtown Plaza   | Mike Ross
+P001      | Downtown Plaza   | Rachel Zane
+P001      | Downtown Plaza   | Harvey Specter
 
 The project name "Downtown Plaza" appears 3 times (once for each worker). This causes:
-Data redundancy (wasted storage space)
-Update anomalies (if project name changes, must update multiple rows)
-Insertion anomalies (cannot add a project without workers)
-Deletion anomalies (deleting last worker might delete project)
+
+- Data redundancy (wasted storage space)
+- Update anomalies (if project name changes, must update multiple rows)
+- Insertion anomalies (cannot add a project without workers)
+- Deletion anomalies (deleting last worker might delete project)
+
 
 2. How Did We Make the Values Atomic?
+-------------------------------------
+
 We used a separation approach by creating multiple tables, each representing a single entity or relationship. For each multi-valued column, we extracted the atomic values and stored them in separate tables.
+
 Specific Transformations:
-Original Column
-Atomic Values Extracted
-New Table Created
-How We Made It Atomic
-WorkerSkills
-Individual skills (e.g., "Carpentry", "Framing", "Electrical")
-worker_skills.csv
-Split skills using | as delimiter. Each skill becomes its own row.
-WorkerCertifications
-Individual certifications (e.g., "OSHA", "First Aid", "PMP")
-worker_certifications.csv
-Split certifications using | as delimiter. Each certification becomes its own row.
-SupplierPhones
-Individual phone numbers
-supplier_phones.csv
-Split phone numbers using | as delimiter. Each phone number becomes its own row.
-MaterialSupplied & MaterialUnitCost
-Individual materials with their costs
-project_materials.csv
-Split materials and costs simultaneously. Each material-cost pair becomes its own row.
-EquipmentUsed & EquipmentRentalCost
-Individual equipment items with their rental costs
-project_equipment.csv
-Split equipment and costs simultaneously. Each equipment-cost pair becomes its own row.
+
+Original Column                | Atomic Values Extracted                    | New Table Created          | How We Made It Atomic
+-------------------------------|--------------------------------------------|----------------------------|--------------------------------------------------
+WorkerSkills                   | Individual skills                          | worker_skills.csv          | Split skills using | as delimiter. Each skill becomes its own row.
+WorkerCertifications           | Individual certifications                  | worker_certifications.csv  | Split certifications using | as delimiter. Each certification becomes its own row.
+SupplierPhones                 | Individual phone numbers                   | supplier_phones.csv        | Split phone numbers using | as delimiter. Each phone number becomes its own row.
+MaterialSupplied &             | Individual materials with their costs      | project_materials.csv      | Split materials and costs simultaneously. Each material-cost pair becomes its own row.
+MaterialUnitCost               |                                            |                            |
+EquipmentUsed &                | Individual equipment items with rental costs| project_equipment.csv     | Split equipment and costs simultaneously. Each equipment-cost pair becomes its own row.
+EquipmentRentalCost            |                                            |                            |
+
 
 Visual Example:
+---------------
+
 Before (Violating 1NF):
-text
 WorkerSkills: Carpentry|Framing
+
 After (Atomic Values in 1NF):
-WorkerID
-Skill
-W001
-Carpentry
-W001
-Framing
+WorkerID | Skill
+---------|----------
+W001     | Carpentry
+W001     | Framing
 
 
 3. Did You Create New Rows, New Tables, or Both?
+------------------------------------------------
+
 We created both new rows AND new tables to achieve 1NF.
+
 New Tables Created (11 Total):
-Table Name
-Purpose
-Number of Rows
-projects.csv
-Core project information
-7 rows
-clients.csv
-Client information (separated to avoid duplication)
-4 rows
-supervisors.csv
-Supervisor information (separated to avoid duplication)
-3 rows
-workers.csv
-Worker information
-5 rows
-worker_skills.csv
-Worker-to-skill relationships (atomic skills)
-15 rows
-worker_certifications.csv
-Worker-to-certification relationships (atomic certifications)
-13 rows
-suppliers.csv
-Supplier information
-6 rows
-supplier_phones.csv
-Supplier-to-phone relationships (atomic phone numbers)
-8 rows
-project_materials.csv
-Project-to-material relationships with costs
-14 rows
-project_equipment.csv
-Project-to-equipment relationships with rental costs
-12 rows
-project_workers.csv
-Project-to-worker relationships
-14 rows
+--------------------------------
+
+Table Name                  | Purpose                                            | Number of Rows
+----------------------------|----------------------------------------------------|---------------
+projects.csv                | Core project information                           | 7 rows
+clients.csv                 | Client information (separated to avoid duplication)| 4 rows
+supervisors.csv             | Supervisor information (separated to avoid duplication)| 3 rows
+workers.csv                 | Worker information                                 | 5 rows
+worker_skills.csv           | Worker-to-skill relationships (atomic skills)      | 15 rows
+worker_certifications.csv   | Worker-to-certification relationships (atomic certifications)| 13 rows
+suppliers.csv               | Supplier information                               | 6 rows
+supplier_phones.csv         | Supplier-to-phone relationships (atomic phone numbers)| 8 rows
+project_materials.csv       | Project-to-material relationships with costs       | 14 rows
+project_equipment.csv       | Project-to-equipment relationships with rental costs| 12 rows
+project_workers.csv         | Project-to-worker relationships                    | 14 rows
+
 
 New Rows Created:
+-----------------
+
 For each multi-valued column, we created new rows:
+
 Example 1 - WorkerSkills:
-Original: Mike Ross had Carpentry|Framing|Concrete (3 values in one cell)
-After 1NF: Created 3 rows in worker_skills.csv:
-Row 1: W001, Carpentry
-Row 2: W001, Framing
-Row 3: W001, Concrete
+- Original: Mike Ross had Carpentry|Framing|Concrete (3 values in one cell)
+- After 1NF: Created 3 rows in worker_skills.csv:
+  Row 1: W001, Carpentry
+  Row 2: W001, Framing
+  Row 3: W001, Concrete
+
 Example 2 - SupplierPhones:
-Original: BuildPro Supplies had 617-555-9000|617-555-9001 (2 values in one cell)
-After 1NF: Created 2 rows in supplier_phones.csv:
-Row 1: S001, 617-555-9000
-Row 2: S001, 617-555-9001
+- Original: BuildPro Supplies had 617-555-9000|617-555-9001 (2 values in one cell)
+- After 1NF: Created 2 rows in supplier_phones.csv:
+  Row 1: S001, 617-555-9000
+  Row 2: S001, 617-555-9001
+
+
 Total Rows Created:
-The original CSV had 14 rows (one per worker assignment)
-After 1NF, we have 102 rows spread across 11 tables (all atomic values)
+-------------------
+
+- The original CSV had 14 rows (one per worker assignment)
+- After 1NF, we have 102 rows spread across 11 tables (all atomic values)
+
 
 4. What Key or Combination of Keys Identifies Each Row?
+-------------------------------------------------------
+
 Primary Keys (Single Attribute):
-Table
-Primary Key
-Why This Key?
-projects.csv
-ProjectID
-Each project has a unique code (P001, P002, etc.)
-clients.csv
-ClientID
-Each client has a unique ID (CL001, CL002, etc.)
-supervisors.csv
-SupervisorID
-Each supervisor has a unique ID (SUP001, SUP002, etc.)
-workers.csv
-WorkerID
-Each worker has a unique ID (W001, W002, etc.)
-suppliers.csv
-SupplierID
-Each supplier has a unique ID (S001, S002, etc.)
+--------------------------------
+
+Table                | Primary Key      | Why This Key?
+---------------------|------------------|----------------------------------------------
+projects.csv         | ProjectID        | Each project has a unique code (P001, P002, etc.)
+clients.csv          | ClientID         | Each client has a unique ID (CL001, CL002, etc.)
+supervisors.csv      | SupervisorID     | Each supervisor has a unique ID (SUP001, SUP002, etc.)
+workers.csv          | WorkerID         | Each worker has a unique ID (W001, W002, etc.)
+suppliers.csv        | SupplierID       | Each supplier has a unique ID (S001, S002, etc.)
+
 
 Composite Primary Keys (Relationship Tables):
-Table
-Composite Primary Key
-Foreign Key References
-Why Composite?
-worker_skills.csv
-(WorkerID, Skill)
-WorkerID → workers.csv
-A worker can have many skills. The combination of WorkerID + Skill is unique.
-worker_certifications.csv
-(WorkerID, Certification)
-WorkerID → workers.csv
-A worker can have many certifications. The combination of WorkerID + Certification is unique.
-supplier_phones.csv
-(SupplierID, PhoneNumber)
-SupplierID → suppliers.csv
-A supplier can have many phones. The combination of SupplierID + PhoneNumber is unique.
-project_materials.csv
-(ProjectID, Material)
-ProjectID → projects.csv
-A project can use many materials. The combination of ProjectID + Material is unique.
-project_equipment.csv
-(ProjectID, Equipment)
-ProjectID → projects.csv
-A project can use many equipment items. The combination of ProjectID + Equipment is unique.
-project_workers.csv
-(ProjectID, WorkerID)
-ProjectID → projects.csv, WorkerID → workers.csv
-A project can have many workers. The combination of ProjectID + WorkerID is unique.
+---------------------------------------------
+
+Table                    | Composite Primary Key      | Foreign Key References                    | Why Composite?
+-------------------------|----------------------------|-------------------------------------------|--------------------------------------------------
+worker_skills.csv        | (WorkerID, Skill)          | WorkerID → workers.csv                    | A worker can have many skills. The combination of WorkerID + Skill is unique.
+worker_certifications.csv| (WorkerID, Certification)  | WorkerID → workers.csv                    | A worker can have many certifications. The combination of WorkerID + Certification is unique.
+supplier_phones.csv      | (SupplierID, PhoneNumber)  | SupplierID → suppliers.csv                | A supplier can have many phones. The combination of SupplierID + PhoneNumber is unique.
+project_materials.csv    | (ProjectID, Material)      | ProjectID → projects.csv                  | A project can use many materials. The combination of ProjectID + Material is unique.
+project_equipment.csv    | (ProjectID, Equipment)     | ProjectID → projects.csv                  | A project can use many equipment items. The combination of ProjectID + Equipment is unique.
+project_workers.csv      | (ProjectID, WorkerID)      | ProjectID → projects.csv, WorkerID → workers.csv | A project can have many workers. The combination of ProjectID + WorkerID is unique.
+
 
 Visual Example of Keys:
+-----------------------
+
 worker_skills.csv Table:
-WorkerID (PK Part 1)
-Skill (PK Part 2)
-W001
-Carpentry
-W001
-Framing
-W001
-Concrete
 
+WorkerID (PK Part 1) | Skill (PK Part 2)
+---------------------|------------------
+W001                 | Carpentry
+W001                 | Framing
+W001                 | Concrete
 
-The composite primary key is (WorkerID, Skill)
-Both values together uniquely identify each row
-WorkerID is also a foreign key referencing workers.csv
+- The composite primary key is (WorkerID, Skill)
+- Both values together uniquely identify each row
+- WorkerID is also a foreign key referencing workers.csv
+
+Conclusion
+----------
+
+After completing the 1NF transformation, our data now:
+
+1. Contains only atomic values (no pipe-separated lists)
+2. Has no repeating groups (data is properly separated into tables)
+3. Has unique row identification (primary keys for every table)
 
 

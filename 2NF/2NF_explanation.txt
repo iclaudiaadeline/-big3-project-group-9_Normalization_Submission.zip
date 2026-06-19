@@ -1,0 +1,91 @@
+2NF Stage Explanation — Group 9
+================================
+
+WHAT IS 2NF?
+------------
+A table is in Second Normal Form when:
+  1. It is already in 1NF.
+  2. Every non-key attribute depends on the whole composite key,
+     not just part of it (no partial dependencies).
+
+
+1. TABLES WITH COMPOSITE KEYS
+---------------------------
+After 1NF, the following tables had composite primary keys and were
+checked for partial dependencies:
+
+  Project_Supplier_Material(ProjectID, SupplierName, MaterialSupplied)
+  Project_Equipment(ProjectID, EquipmentUsed)
+  Project_Worker(ProjectID, WorkerName)
+  Worker_Skills(WorkerName, Skill)
+  Worker_Certifications(WorkerName, Certification)
+  Supplier_Phones(SupplierName, SupplierPhone)
+
+
+PARTIAL DEPENDENCIES FOUND
+---------------------------
+
+1. MATERIAL UNIT COST (Project_Supplier_Material → MaterialUnitCost)
+
+   In the 1NF table Project_Supplier_Material:
+     (ProjectID, SupplierName, MaterialSupplied) → MaterialUnitCost
+
+   MaterialUnitCost depends only on (SupplierName, MaterialSupplied),
+   not on ProjectID. This is a partial dependency.
+
+   Fix: Moved MaterialUnitCost into a new Supplier_Material table.
+        Project_Supplier_Material becomes a pure junction table.
+
+   New tables:
+     Supplier_Material(SupplierName, MaterialSupplied, MaterialUnitCost)
+     Project_Supplier_Material(ProjectID, SupplierName, MaterialSupplied)
+
+
+2. EQUIPMENT RENTAL COST (Project_Equipment → EquipmentRentalCost)
+
+   In the 1NF table Project_Equipment:
+     (ProjectID, EquipmentUsed) → EquipmentRentalCost
+
+   EquipmentRentalCost depends only on EquipmentUsed, not on ProjectID.
+   This is a partial dependency.
+
+   Fix: Moved EquipmentRentalCost into a new Equipment table.
+        Project_Equipment becomes a pure junction table.
+
+   New tables:
+     Equipment(EquipmentUsed, EquipmentRentalCost)
+     Project_Equipment(ProjectID, EquipmentUsed)
+
+
+3. PRIMARY KEYS AND FOREIGN KEYS INTRODUCED IN 2NF
+------------------------------------------------
+  New primary keys:
+    Supplier_Material  → PK: (SupplierName, MaterialSupplied)
+    Equipment          → PK: EquipmentUsed
+
+  New foreign keys:
+    Project_Supplier_Material.(SupplierName, MaterialSupplied) → Supplier_Material
+    Project_Equipment.EquipmentUsed                            → Equipment
+
+
+4. TABLES CARRIED FORWARD FROM 1NF (UNCHANGED STRUCTURE)
+------------------------------------------------------
+  Supplier(SupplierName, SupplierCity)
+  Supplier_Phones(SupplierName, SupplierPhone)
+  worker(WorkerName, WorkerPhone, WorkerHourlyRate)
+  Worker_Skills(WorkerName, Skill)
+  Worker_Certifications(WorkerName, Certification)
+  Project_Worker(ProjectID, WorkerName)
+
+  These tables either have single-column primary keys (partial
+  dependencies are impossible) or are pure junction tables with no
+  non-key attributes.
+
+
+5. WHY THE DESIGN IS NOW IN 2NF
+-----------------------------
+Every non-key attribute in every table depends on the full primary key.
+MaterialUnitCost now lives in Supplier_Material where the full key is
+(SupplierName, MaterialSupplied). EquipmentRentalCost now lives in
+Equipment where the full key is EquipmentUsed. Junction tables carry
+only foreign keys and no partially-dependent attributes.
